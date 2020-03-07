@@ -45,13 +45,17 @@ export default {
         }
     },
     mounted() {
-        if (this.layoutItem) {
-            //TODO: Handle layout items
-        }
         if (this.domainObject.configuration) {
             this.defautStyle = this.domainObject.configuration.defaultStyle;
             if (this.domainObject.configuration.conditionalStyle) {
-                this.conditionalStyles = this.domainObject.configuration.conditionalStyle.styles || [];
+                if (this.layoutItem) {
+                    let conditionalStyle = this.domainObject.configuration.conditionalStyle[this.layoutItem.id];
+                    if (conditionalStyle) {
+                        this.conditionalStyles = conditionalStyle.styles || [];
+                    }
+                } else {
+                    this.conditionalStyles = this.domainObject.configuration.conditionalStyle.styles || [];
+                }
             }
         }
     },
@@ -67,7 +71,14 @@ export default {
         removeConditionSet() {
             this.conditionSetIdentifier = '';
             this.conditionalStyles = [];
-            this.persist(undefined);
+            let domainObjectConditionalStyle =  this.domainObject.configuration.conditionalStyle || {};
+            domainObjectConditionalStyle[this.layoutItem.id] = undefined;
+            delete domainObjectConditionalStyle[this.layoutItem.id];
+            if (this.layoutItem) {
+                this.persist(domainObjectConditionalStyle);
+            } else {
+                this.persist(undefined);
+            }
         },
         initializeConditionalStyles() {
             const backgroundColors = [{backgroundColor: 'red'},{backgroundColor: 'orange'}, {backgroundColor: 'blue'}];
@@ -78,11 +89,20 @@ export default {
                         style: backgroundColors[index]
                     });
                 });
-                this.persist({
+                let domainObjectConditionalStyle =  this.domainObject.configuration.conditionalStyle || {};
+                let conditionalStyle = {
                     defaultStyle: this.defaultStyle || {backgroundColor: 'inherit'},
                     conditionSetIdentifier: this.conditionSetIdentifier,
                     styles: this.conditionalStyles
-                });
+                };
+                if (this.layoutItem) {
+                    this.persist({
+                        ...domainObjectConditionalStyle,
+                        [this.layoutItem.id]: conditionalStyle
+                    });
+                } else {
+                    this.persist(conditionalStyle);
+                }
             });
         },
         findStyleByConditionId(id) {
