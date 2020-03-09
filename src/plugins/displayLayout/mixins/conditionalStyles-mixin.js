@@ -9,8 +9,10 @@ export default {
     },
     mounted() {
         this.domainObject = this.$parent.domainObject;
+        console.log(this.itemId);
         this.itemId = this.item.id;
-        this.setConditionalStyleForItem();
+        console.log(this.itemId);
+        this.conditionalStyle = this.getConditionalStyleForItem(this.domainObject.configuration.conditionalStyle);
         this.initConditionalStyles();
     },
     destroyed() {
@@ -19,9 +21,11 @@ export default {
         }
     },
     methods: {
-        setConditionalStyleForItem() {
-            if (this.domainObject.configuration.conditionalStyle) {
-                this.conditionalStyle = this.domainObject.configuration.conditionalStyle[this.itemId];
+        getConditionalStyleForItem(conditionalStyle) {
+            if (conditionalStyle) {
+                return conditionalStyle[this.itemId];
+            } else {
+                return undefined;
             }
         },
         initConditionalStyles() {
@@ -38,8 +42,11 @@ export default {
 
             this.stopListeningConditionalStyles = this.openmct.objects.observe(this.domainObject, 'configuration.conditionalStyle', (newConditionalStyle) => {
                 //Updating conditional styles in the inspector view will trigger this so that the changes are reflected immediately
-                this.setConditionalStyleForItem(newConditionalStyle);
-                this.styleRuleManager.updateConditionalStyleConfig(this.conditionalStyle);
+                let newItemConditionalStyle = this.getConditionalStyleForItem(newConditionalStyle);
+                if (this.conditionalStyle !== newItemConditionalStyle) {
+                    this.conditionalStyle = newItemConditionalStyle;
+                    this.styleRuleManager.updateConditionalStyleConfig(this.conditionalStyle);
+                }
             });
         },
         updateStyle(style) {

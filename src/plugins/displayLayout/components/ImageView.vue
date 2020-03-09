@@ -36,6 +36,7 @@
 
 <script>
 import LayoutFrame from './LayoutFrame.vue'
+import conditionalStylesMixin from "@/plugins/displayLayout/mixins/conditionalStyles-mixin";
 
 export default {
     makeDefinition(openmct, gridSize, element) {
@@ -52,6 +53,7 @@ export default {
     components: {
         LayoutFrame
     },
+    mixins: [conditionalStylesMixin],
     props: {
         item: {
             type: Object,
