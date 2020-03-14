@@ -222,6 +222,12 @@ export default class ConditionClass extends EventEmitter {
             });
     }
 
+    getTelemetrySubscriptions() {
+        return this.criteria.map(criterion => {
+            return criterion.telemetryObjectIdAsString;
+        });
+    }
+
     subscribe() {
         // TODO it looks like on any single criterion update subscriptions fire for all criteria
         this.criteria.forEach((criterion) => {

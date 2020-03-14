@@ -34,19 +34,31 @@ export default class ConditionManager extends EventEmitter {
         this.conditionResults = {};
         this.conditionCollection = [];
         this.instantiate = this.openmct.$injector.get('instantiate');
-        this.composition = this.openmct.composition.get(domainObject);
-        this.loaded = this.composition.load();
+        this.loadComposition = this.openmct.composition.get(domainObject);
+        this.composition = this.loadComposition.load();
         this.initialize();
     }
 
     load() {
-        return this.loaded;
+        return this.composition;
     }
 
     initialize() {
         this.openmct.objects.get(this.domainObject.identifier)
             .then((obj) => {
                 this.observeForChanges(obj);
+                this.load().then((endpoints) => {
+                    this.unsubscribes = endpoints.map(endpoint => {
+                        this.openmct.telemetry.subscribe(endpoint, (datum) => {
+                            const telemetryId = this.openmct.objects.makeKeyString(endpoint.identifier);
+                            this.conditionCollection.filter(condition => {
+                                return condition.getTelemetrySubscriptions().includes(telemetryId);
+                            }).forEach(subscribingCondition => {
+                                subscribingCondition.emit(`subscription:${telemetryId}`, datum);
+                            });
+                        });
+                    });
+                });
                 if (this.domainObject.configuration.conditionCollection.length) {
                     this.domainObject.configuration.conditionCollection.forEach((conditionConfigurationId, index) => {
                         this.openmct.objects.get(conditionConfigurationId).then((conditionConfiguration) => {
