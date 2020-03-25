@@ -45,6 +45,7 @@ export default class ConditionSetTelemetryProvider {
 
         return conditionManager.requestLADConditionSetOutput()
             .then(latestOutput => {
+                this.destroyConditionManager(this.openmct.objects.makeKeyString(domainObject.identifier));
                 return latestOutput ? [latestOutput] : [];
             });
     }
@@ -53,7 +54,6 @@ export default class ConditionSetTelemetryProvider {
         let conditionManager = this.getConditionManager(domainObject);
 
         conditionManager.on('conditionSetResultUpdated', callback);
-
         return this.destroyConditionManager.bind(this, this.openmct.objects.makeKeyString(domainObject.identifier));
     }
 
@@ -66,10 +66,14 @@ export default class ConditionSetTelemetryProvider {
         const id = this.openmct.objects.makeKeyString(domainObject.identifier);
 
         if (!this.conditionManagerPool[id]) {
-            this.conditionManagerPool[id] = new ConditionManager(domainObject, this.openmct);
+            this.conditionManagerPool[id] = {
+                conditionManager: new ConditionManager(domainObject, this.openmct),
+                count: 0
+            };
         }
 
-        return this.conditionManagerPool[id];
+        this.conditionManagerPool[id].count += 1;
+        return this.conditionManagerPool[id].conditionManager;
     }
 
     /**
@@ -77,8 +81,16 @@ export default class ConditionSetTelemetryProvider {
      * can be called manually for views that only request but do not subscribe to data
      */
     destroyConditionManager(id) {
-        this.conditionManagerPool[id].off('conditionSetResultUpdated');
-        this.conditionManagerPool[id].destroy();
-        delete this.conditionManagerPool[id];
+        if (!this.conditionManagerPool[id]) {
+            console.warn(`tried to destroy a condition manager that doesn't exist`);
+            return;
+        }
+
+        this.conditionManagerPool[id].count -= 1;
+        if (this.conditionManagerPool[id].count <= 0) {
+            this.conditionManagerPool[id].conditionManager.off('conditionSetResultUpdated');
+            this.conditionManagerPool[id].conditionManager.destroy();
+            delete this.conditionManagerPool[id];
+        }
     }
 }
