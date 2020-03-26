@@ -30,6 +30,7 @@ export default class StyleRuleManager extends EventEmitter {
         if (styleConfiguration) {
             this.initialize(styleConfiguration);
             if (styleConfiguration.conditionSetIdentifier) {
+                console.log('on init');
                 this.subscribeToConditionSet();
             } else {
                 this.applyStaticStyle();
@@ -64,6 +65,7 @@ export default class StyleRuleManager extends EventEmitter {
             this.initialize(styleConfiguration);
             //Only resubscribe if the conditionSet has changed.
             if (isNewConditionSet) {
+                console.log('new set');
                 this.subscribeToConditionSet();
             }
         }

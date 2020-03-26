@@ -28,6 +28,7 @@ export default class ConditionManager extends EventEmitter {
     constructor(conditionSetDomainObject, openmct) {
         super();
         this.openmct = openmct;
+        console.log(`new CM: ${this.openmct.objects.makeKeyString(conditionSetDomainObject.identifier)}`);
         this.conditionSetDomainObject = conditionSetDomainObject;
         this.timeAPI = this.openmct.time;
         this.latestTimestamp = {};
@@ -258,11 +259,22 @@ export default class ConditionManager extends EventEmitter {
         this.emit(`broadcastTelemetry`, Object.assign({}, datum, {id: id}));
     }
 
+    provideTelemetry(callback) {
+        console.log('providing telemetry');
+        this.on('conditionSetResultUpdated', callback);
+    }
+
+    stopProvidingTelemetry(callback) {
+        console.log('stop providing telemetry');
+        this.off('conditionSetResultUpdated', callback);
+    }
+
     persistConditions() {
         this.openmct.objects.mutate(this.conditionSetDomainObject, 'configuration.conditionCollection', this.conditionSetDomainObject.configuration.conditionCollection);
     }
 
     destroy() {
+        console.log(`destroy: ${this.openmct.objects.makeKeyString(this.conditionSetDomainObject.identifier)}`);
         this.composition.off('add', this.subscribeToTelemetry, this);
         this.composition.off('remove', this.unsubscribeFromTelemetry, this);
         Object.values(this.subscriptions).forEach(unsubscribe => unsubscribe());

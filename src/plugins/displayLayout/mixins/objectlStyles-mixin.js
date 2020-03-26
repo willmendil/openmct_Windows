@@ -30,6 +30,7 @@ export default {
             if (!this.styleRuleManager) {
                 this.styleRuleManager = new StyleRuleManager(this.objectStyle, this.openmct, this.updateStyle.bind(this));
             } else {
+                console.log('here');
                 this.styleRuleManager.updateObjectStyleConfig(this.objectStyle);
             }
 

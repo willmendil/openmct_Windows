@@ -268,6 +268,7 @@ export default {
             this.openmct.contextMenu._showContextMenuForObjectPath(this.currentObjectPath, event.x, event.y, CONTEXT_MENU_ACTIONS);
         },
         initObjectStyles() {
+            console.log('this');
             this.styleRuleManager = new StyleRuleManager(this.domainObject.configuration.objectStyles, this.openmct, this.updateStyle.bind(this));
 
             if (this.unlistenStyles) {

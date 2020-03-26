@@ -51,6 +51,7 @@ define([
     };
 
     EvaluatorPool.prototype.release = function (evaluator) {
+        console.log('releasing');
         var poolEntry = this.byEvaluator.get(evaluator);
         poolEntry.leases -= 1;
         if (poolEntry.leases === 0) {

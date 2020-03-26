@@ -20,12 +20,12 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-import ConditionManager from './ConditionManager'
+import ConditionManagerPool from './ConditionManagerPool';
 
 export default class ConditionSetTelemetryProvider {
     constructor(openmct) {
         this.openmct = openmct;
-        this.conditionManagerPool = {};
+        this.pool = new ConditionManagerPool(openmct);
     }
 
     isTelemetryObject(domainObject) {
@@ -41,56 +41,23 @@ export default class ConditionSetTelemetryProvider {
     }
 
     request(domainObject) {
-        let conditionManager = this.getConditionManager(domainObject);
+        let conditionManager = this.pool.get(domainObject);
 
         return conditionManager.requestLADConditionSetOutput()
             .then(latestOutput => {
-                this.destroyConditionManager(this.openmct.objects.makeKeyString(domainObject.identifier));
+                this.pool.release(this.openmct.objects.makeKeyString(domainObject.identifier));
                 return latestOutput ? [latestOutput] : [];
             });
     }
 
     subscribe(domainObject, callback) {
-        let conditionManager = this.getConditionManager(domainObject);
+        let conditionManager = this.pool.get(domainObject);
 
-        conditionManager.on('conditionSetResultUpdated', callback);
-        return this.destroyConditionManager.bind(this, this.openmct.objects.makeKeyString(domainObject.identifier));
-    }
-
-    /**
-     * returns conditionManager instance for corresponding domain object
-     * creates the instance if it is not yet created
-     * @private
-     */
-    getConditionManager(domainObject) {
-        const id = this.openmct.objects.makeKeyString(domainObject.identifier);
-
-        if (!this.conditionManagerPool[id]) {
-            this.conditionManagerPool[id] = {
-                conditionManager: new ConditionManager(domainObject, this.openmct),
-                count: 0
-            };
-        }
-
-        this.conditionManagerPool[id].count += 1;
-        return this.conditionManagerPool[id].conditionManager;
-    }
-
-    /**
-     * cleans up and destroys conditionManager instance for corresponding domain object id
-     * can be called manually for views that only request but do not subscribe to data
-     */
-    destroyConditionManager(id) {
-        if (!this.conditionManagerPool[id]) {
-            console.warn(`tried to destroy a condition manager that doesn't exist`);
-            return;
-        }
-
-        this.conditionManagerPool[id].count -= 1;
-        if (this.conditionManagerPool[id].count <= 0) {
-            this.conditionManagerPool[id].conditionManager.off('conditionSetResultUpdated');
-            this.conditionManagerPool[id].conditionManager.destroy();
-            delete this.conditionManagerPool[id];
-        }
+        conditionManager.provideTelemetry(callback);
+        return () => {
+            console.log('unsubscribe');
+            conditionManager.stopProvidingTelemetry(callback);
+            this.pool.release(this.openmct.objects.makeKeyString(domainObject.identifier));
+        };
     }
 }
