@@ -54,6 +54,7 @@ export default class ConditionClass extends EventEmitter {
 
         this.openmct = openmct;
         this.conditionManager = conditionManager;
+        this.resultsManager = this.conditionManager.resultsManager;
         this.id = conditionConfiguration.id;
         this.criteria = [];
         this.criteriaResults = {};
@@ -231,15 +232,17 @@ export default class ConditionClass extends EventEmitter {
         return Promise.all(criteriaResults)
             .then(results => {
                 results.forEach(result => {
-                    this.updateCriteriaResults(result);
-                    this.latestTimestamp = this.getLatestTimestamp(this.latestTimestamp, result.data)
+                    // this.updateCriteriaResults(result);
+                    this.resultsManager.updateLADCriteriaResults(this.id, result);
+                    // this.latestTimestamp = this.getLatestTimestamp(this.latestTimestamp, result.data)
                 });
-                this.evaluate();
+                // this.evaluate();
+                return this.resultsManager.evaluateConditionResult(this.id);
 
-                return {
-                    id: this.id,
-                    data: Object.assign({}, this.latestTimestamp, { result: this.result })
-                }
+                // return {
+                //     id: this.id,
+                //     data: Object.assign({}, this.latestTimestamp, { result: this.result })
+                // }
             });
     }
 

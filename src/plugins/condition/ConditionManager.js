@@ -21,6 +21,7 @@
  *****************************************************************************/
 
 import Condition from "./Condition";
+import ConditionResultsManager from './ConditionResultsManager';
 import uuid from "uuid";
 import EventEmitter from 'EventEmitter';
 
@@ -38,12 +39,12 @@ export default class ConditionManager extends EventEmitter {
         this.subscriptions = {};
         this.telemetryObjects = {};
         this.testData = {conditionTestData: [], applied: false};
+        this.resultsManager = new ConditionResultsManager(this.openmct);
         this.initialize();
 
         this.stopObservingForChanges = this.openmct.objects.observe(this.conditionSetDomainObject, '*', (newDomainObject) => {
             this.conditionSetDomainObject = newDomainObject;
         });
-
     }
 
     subscribeToTelemetry(endpoint) {
@@ -73,7 +74,7 @@ export default class ConditionManager extends EventEmitter {
     }
 
     initialize() {
-        this.conditionResults = {};
+        // this.conditionResults = {};
         this.conditionClassCollection = [];
         if (this.conditionSetDomainObject.configuration.conditionCollection.length) {
             this.conditionSetDomainObject.configuration.conditionCollection.forEach((conditionConfiguration, index) => {
@@ -251,8 +252,10 @@ export default class ConditionManager extends EventEmitter {
 
             return Promise.all(ladConditionResults)
                 .then((results) => {
-                    results.forEach(resultObj => { this.updateConditionResults(resultObj); });
-                    const currentCondition = this.getCurrentCondition();
+                    // results.forEach(resultObj => { this.updateConditionResults(resultObj); });
+                    results.forEach(resultObj => { this.resultsManager.updateLADConditionResults(resultObj); });
+                    // const currentCondition = this.getCurrentCondition();
+                    const currentCondition = this.resultsMAnager.getLADCondition();
 
                     return Object.assign(
                         {
