@@ -29,7 +29,6 @@ import PopupMenu from './popup-menu.vue';
 import PreviewAction from '../../../ui/preview/PreviewAction';
 import RemoveDialog from '../utils/removeDialog';
 import PainterroInstance from '../utils/painterroInstance';
-import RemoveDialog from '../utils/removeDialog';
 import SnapshotTemplate from './snapshot-template.html';
 import Vue from 'vue';
 
@@ -64,9 +63,6 @@ export default {
     },
     mounted() {
         this.addPopupMenuItems();
-    },
-    mounted() {
-        this.initRemoveDialog();
     },
     methods: {
         addPopupMenuItems() {
