@@ -60,7 +60,7 @@ export default class ConditionClass extends EventEmitter {
         this.criteriaResults = {};
         this.result = undefined;
         this.latestTimestamp = {};
-        this.timeSystems = this.openmct.time.getAllTimeSystems();
+        this.timeSystemKey = this.openmct.time.timeSystem().key;
         if (conditionConfiguration.configuration.criteria) {
             this.createCriteria(conditionConfiguration.configuration.criteria);
         }
@@ -237,7 +237,7 @@ export default class ConditionClass extends EventEmitter {
                     latestTimestamp = getLatestTimestamp(
                         latestTimestamp,
                         data,
-                        this.timeSystems
+                        this.timeSystemKey
                     );
                 });
                 return {

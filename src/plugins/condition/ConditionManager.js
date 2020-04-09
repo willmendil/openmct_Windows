@@ -31,7 +31,7 @@ export default class ConditionManager extends EventEmitter {
         this.openmct = openmct;
         this.conditionSetDomainObject = conditionSetDomainObject;
         this.timeAPI = this.openmct.time;
-        this.timeSystems = this.openmct.time.getAllTimeSystems();
+        this.timeSystemKey = this.openmct.time.timeSystem().key;
         this.composition = this.openmct.composition.get(conditionSetDomainObject);
         this.composition.on('add', this.subscribeToTelemetry, this);
         this.composition.on('remove', this.unsubscribeFromTelemetry, this);
@@ -39,6 +39,7 @@ export default class ConditionManager extends EventEmitter {
         this.subscriptions = {};
         this.telemetryObjects = {};
         this.testData = {conditionTestData: [], applied: false};
+        this.currentResult = {};
         this.initialize();
 
         this.stopObservingForChanges = this.openmct.objects.observe(this.conditionSetDomainObject, '*', (newDomainObject) => {
@@ -213,19 +214,44 @@ export default class ConditionManager extends EventEmitter {
     handleConditionResult(resultObj) {
         this.updateConditionResults(resultObj);
         const currentCondition = this.getCurrentCondition(this.conditionResults);
-        const timestamp = JSON.parse(JSON.stringify(resultObj.data))
-        delete timestamp.result
+        const timestamp = {};
+        timestamp[this.timeSystemKey] = resultObj.data[this.timeSystemKey];
 
-        this.emit('conditionSetResultUpdated',
-            Object.assign(
-                {
-                    output: currentCondition.configuration.output,
-                    id: this.conditionSetDomainObject.identifier,
-                    conditionId: currentCondition.id
-                },
-                timestamp
+        const result = Object.assign(
+            { output: currentCondition.configuration.output },
+            timestamp
+        );
+        if (this.isNewCurrentResult(resultObj.data)) {
+            this.updateCurrentResult(result);
+
+            this.emit('conditionSetResultUpdated',
+                Object.assign(
+                    {
+                        output: currentCondition.configuration.output,
+                        id: this.conditionSetDomainObject.identifier,
+                        conditionId: currentCondition.id
+                    },
+                    timestamp
+                )
             )
-        )
+        }
+    }
+
+    isNewCurrentResult(data) {
+        if (!this.currentResult || !this.currentResult.hasOwnProperty('output')) {
+            return true;
+        }
+        if (String(data.result) !== this.currentResult.output) {
+            return true;
+        }
+        if (data[this.timeSystemKey] !== this.currentResult[this.timeSystemKey]) {
+            return true;
+        }
+        return false;
+    }
+
+    updateCurrentResult(result) {
+        this.currentResult = { ...result };
     }
 
     requestLADConditionSetOutput() {
@@ -249,7 +275,7 @@ export default class ConditionManager extends EventEmitter {
                         latestTimestamp = getLatestTimestamp(
                             latestTimestamp,
                             data,
-                            this.timeSystems
+                            this.timeSystemKey
                         );
                     });
                     const currentCondition = this.getCurrentCondition(conditionResults);

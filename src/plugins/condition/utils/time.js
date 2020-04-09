@@ -20,15 +20,17 @@
  * at runtime from the About dialog for additional information.
  *****************************************************************************/
 
-export const getLatestTimestamp = (current, compare, timeSystems) => {
-    const timestamp = Object.assign({}, current);
+export const getLatestTimestamp = (current, compare, timeSystemKey) => {
+    if (!compare[timeSystemKey]) {
+        console.warn(`This timestamp is not of type: ${timeSystemKey}`);
+    }
+    const timestamp = { ...current };
 
-    timeSystems.forEach(timeSystem => {
-        if (!timestamp[timeSystem.key]
-            || compare[timeSystem.key] > timestamp[timeSystem.key]
-        ) {
-            timestamp[timeSystem.key] = compare[timeSystem.key];
-        }
-    });
+    if (!timestamp[timeSystemKey]
+        || compare[timeSystemKey] > timestamp[timeSystemKey]
+    ) {
+        timestamp[timeSystemKey] = compare[timeSystemKey];
+    }
+
     return timestamp;
 }

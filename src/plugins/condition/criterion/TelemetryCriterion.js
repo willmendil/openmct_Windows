@@ -38,7 +38,6 @@ export default class TelemetryCriterion extends EventEmitter {
         this.openmct = openmct;
         this.objectAPI = this.openmct.objects;
         this.telemetryAPI = this.openmct.telemetry;
-        this.timeAPI = this.openmct.time;
         this.id = telemetryDomainObjectDefinition.id;
         this.telemetry = telemetryDomainObjectDefinition.telemetry;
         this.operation = telemetryDomainObjectDefinition.operation;
@@ -47,6 +46,7 @@ export default class TelemetryCriterion extends EventEmitter {
         this.telemetryObject = telemetryDomainObjectDefinition.telemetryObject;
         this.telemetryObjectIdAsString = this.objectAPI.makeKeyString(telemetryDomainObjectDefinition.telemetry);
         this.on(`subscription:${this.telemetryObjectIdAsString}`, this.handleSubscription);
+        this.timeSystemKey = this.openmct.time.timeSystem().key;
         this.emitEvent('criterionUpdated', this);
     }
 
@@ -60,11 +60,9 @@ export default class TelemetryCriterion extends EventEmitter {
         };
 
         if (data) {
-            // TODO check back to see if we should format times here
-            this.timeAPI.getAllTimeSystems().forEach(timeSystem => {
-                datum[timeSystem.key] = data[timeSystem.key]
-            });
+            datum[this.timeSystemKey] = data[this.timeSystemKey];
         }
+
         return datum;
     }
 
