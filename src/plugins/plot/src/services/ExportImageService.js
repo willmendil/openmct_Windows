@@ -75,6 +75,8 @@ define(
             }
 
             return html2canvas(element, {
+                useCORS: true,
+                allowTaint: true,
                 onclone: function (document) {
                     if (className) {
                         var clonedElement = document.getElementById(exportId);
