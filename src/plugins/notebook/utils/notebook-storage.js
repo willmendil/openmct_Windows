@@ -19,7 +19,6 @@ export function setDefaultNotebookSection(section) {
 
     notebookStorage.section = section;
     window.localStorage.setItem(NOTEBOOK_LOCAL_STORAGE, JSON.stringify(notebookStorage));
-
 }
 
 export function setDefaultNotebookPage(page) {
