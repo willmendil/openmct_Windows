@@ -70,7 +70,7 @@ export default class Snapshot {
                 callback: this._navigateToNotebook(url),
                 cssClass: '',
                 label: 'Go to Notebook',
-                msg: 'click to view'
+                msg: '| click to view'
             }
         }
 
